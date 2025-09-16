@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.10)
 cmake_policy(SET CMP0074 NEW)
 
 # Project-level configuration.
-set(PROJECT_NAME "webview_cef")
+set(PROJECT_NAME "flutter_chromium")
 project(${PROJECT_NAME} LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -19,15 +19,17 @@ execute_process(
 message(WARNING "${patch_output}")
 
 # Setup CEF
-include(${CMAKE_CURRENT_SOURCE_DIR}/../third/download.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/download_cef.cmake)
 # Allow overriding from parent with -DDOWNLOAD_CEF_FLAVOR=minimal|standard
 if(NOT DEFINED DOWNLOAD_CEF_FLAVOR)
   set(DOWNLOAD_CEF_FLAVOR "standard")
 endif()
 message(STATUS "CEF download flavor: ${DOWNLOAD_CEF_FLAVOR}")
-prepare_prebuilt_files(${CMAKE_CURRENT_SOURCE_DIR}/../third/cef)
+# Use only OS-specific CEF directory (no legacy fallback)
+set(_CEF_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third/cef")
+prepare_prebuilt_files(${_CEF_ROOT})
 
-set(CEF_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../third/cef")
+set(CEF_ROOT "${_CEF_ROOT}")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CEF_ROOT}/cmake")
 find_package(CEF REQUIRED)
 
@@ -50,16 +52,16 @@ endif()
 
 # This value is used when generating builds using this plugin, so it must
 # not be changed.
-set(PLUGIN_NAME "webview_cef_plugin")
+set(PLUGIN_NAME "flutter_chromium_plugin")
 
 # Define the plugin library target. Its name must not be changed (see comment
 # on PLUGIN_NAME above).
 #
 # Any new source files that you add to the plugin should be added here.
 add_library(${PLUGIN_NAME} SHARED
-  "webview_cef_plugin.cc"
-  "webview_cef_keyevent.h"
-  "webview_cef_texture.h"
+  "flutter_chromium_plugin.cc"
+  "flutter_chromium_keyevent.h"
+  "flutter_chromium_texture.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/../common/webview_app.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/../common/webview_app.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/../common/webview_handler.cc"
@@ -160,7 +162,7 @@ endforeach(FILE)
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
-set(webview_cef_bundled_libraries
+set(flutter_chromium_bundled_libraries
   ""
   ${cef_library_list}
   PARENT_SCOPE

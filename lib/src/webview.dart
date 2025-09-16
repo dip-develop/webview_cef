@@ -450,7 +450,7 @@ class WebViewState extends State<WebView> with WebeViewTextInput {
       autofocus: true,
       focusNode: _focusNode,
       canRequestFocus: true,
-      debugLabel: "webview_cef",
+      debugLabel: "flutter_chromium",
       onFocusChange: (focused) {
         _composingText = '';
         if (focused) {

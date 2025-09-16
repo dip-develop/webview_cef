@@ -1,5 +1,4 @@
 /// A message that was sent by JavaScript code running in a [WebView].
-library webview_javascript;
 
 class JavascriptMessage {
   /// Constructs a JavaScript message object.

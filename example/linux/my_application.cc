@@ -6,7 +6,7 @@
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
-#include <webview_cef/webview_cef_plugin.h>
+#include <flutter_chromium/flutter_chromium_plugin.h>
 
 struct _MyApplication {
   GtkApplication parent_instance;

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:webview_cef/webview_cef.dart';
+import 'package:flutter_chromium/flutter_chromium.dart';
 
 void main() {
   runApp(const MyApp());
@@ -66,10 +66,10 @@ class _MyAppState extends State<MyApp> {
     await WebviewManager().initialize(
         userAgent: "test/userAgent",
         enableGPU: true,
-        cachePath: "/tmp/webview_cef_cache",
+        cachePath: "/tmp/flutter_chromium_cache",
         persistSessionCookies: true,
         persistUserPreferences: true);
-    String url = "www.baidu.com";
+    String url = "https://dip.dev";
     _textController.text = url;
     //unified interface for all platforms set user agent
     _controller.setWebviewListener(WebviewEventsListener(

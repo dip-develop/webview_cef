@@ -1,0 +1,12 @@
+This project is based on and includes substantial portions of the
+"webview_cef" project (https://github.com/hlwhl/webview_cef), which is
+licensed under the Apache License, Version 2.0. The full text of the
+Apache-2.0 license is preserved in LICENSE.
+
+Modifications and new code in this fork are provided under the MIT license.
+See LICENSE-MIT for details.
+
+Additional attributions:
+- Chromium Embedded Framework (CEF) and Chromium binaries/resources are
+  subject to their own licenses. When distributing builds that include CEF
+  binaries/resources, please include their respective LICENSE/NOTICE files.

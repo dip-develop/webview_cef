@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:webview_cef/src/webview_inject_user_script.dart';
+import 'webview_inject_user_script.dart';
 
 import 'webview.dart';
 
@@ -15,7 +15,7 @@ class WebviewManager extends ValueNotifier<bool> {
   // Tracks the current initialization operation; null when not started yet.
   Completer<void>? _creatingCompleter;
 
-  final MethodChannel pluginChannel = const MethodChannel("webview_cef");
+  final MethodChannel pluginChannel = const MethodChannel("flutter_chromium");
 
   final Map<int, WebViewController> _webViews = <int, WebViewController>{};
   final Map<int, InjectUserScripts?> _injectUserScripts =
@@ -109,7 +109,7 @@ class WebviewManager extends ValueNotifier<bool> {
           throw PlatformException(
             code: 'INIT_TIMEOUT',
             message:
-                'webview_cef init did not respond. Verify CEF binaries and plugin initialization on the platform side.',
+                'flutter_chromium init did not respond. Verify CEF binaries and plugin initialization on the platform side.',
           );
         });
       } else {
@@ -118,7 +118,7 @@ class WebviewManager extends ValueNotifier<bool> {
           throw PlatformException(
             code: 'INIT_TIMEOUT',
             message:
-                'webview_cef init did not respond. Verify CEF binaries and plugin initialization on the platform side.',
+                'flutter_chromium init did not respond. Verify CEF binaries and plugin initialization on the platform side.',
           );
         });
       }

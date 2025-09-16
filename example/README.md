@@ -1,6 +1,6 @@
-# webview_cef_example
+# flutter_chromium_example
 
-Demonstrates how to use the webview_cef plugin.
+Demonstrates how to use the `flutter_chromium` plugin.
 
 ## Getting Started
 

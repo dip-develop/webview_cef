@@ -1,5 +1,7 @@
+#include <flutter_chromium/flutter_chromium_plugin.h>
 #include "my_application.h"
-#include <webview_cef/webview_cef_plugin.h>
+// Prefer new header; compat include remains available via include/webview_cef/
+#include <flutter_chromium/flutter_chromium_plugin.h>
 
 int main(int argc, char** argv) {
   int exit_code = initCEFProcesses(argc, argv);

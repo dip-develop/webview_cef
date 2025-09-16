@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.electronicdream" "\0"
-            VALUE "FileDescription", "webview_cef_example" "\0"
+            VALUE "FileDescription", "flutter_chromium_example" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "webview_cef_example" "\0"
+            VALUE "InternalName", "flutter_chromium_example" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2022 com.electronicdream. All rights reserved." "\0"
-            VALUE "OriginalFilename", "webview_cef_example.exe" "\0"
-            VALUE "ProductName", "webview_cef_example" "\0"
+            VALUE "OriginalFilename", "flutter_chromium_example.exe" "\0"
+            VALUE "ProductName", "flutter_chromium_example" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

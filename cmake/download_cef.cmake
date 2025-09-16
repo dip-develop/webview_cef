@@ -1,0 +1,133 @@
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(WARNING "current system is Linux")
+    # Option: choose which CEF flavor to download (minimal|standard)
+    if(NOT DEFINED DOWNLOAD_CEF_FLAVOR)
+        set(DOWNLOAD_CEF_FLAVOR "standard")
+    endif()
+    string(TOLOWER "${DOWNLOAD_CEF_FLAVOR}" _cef_flavor)
+
+    if(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "aarch64")
+        if(_cef_flavor STREQUAL "minimal")
+            # Minimal build for arm64
+            set(cef_prebuilt_path "https://cef-builds.spotifycdn.com/cef_binary_130.1.2%2Bg48f3ef6%2Bchromium-130.0.6723.44_linuxarm64_minimal.tar.bz2")
+            set(cef_prebuilt_version "cef_binary_130.1.2%2Bg48f3ef6%2Bchromium-130.0.6723.44_linuxarm64_minimal.tar.bz2")
+        else()
+            set(cef_prebuilt_path "https://cef-builds.spotifycdn.com/cef_binary_130.1.2%2Bg48f3ef6%2Bchromium-130.0.6723.44_linuxarm64.tar.bz2")
+            set(cef_prebuilt_version "cef_binary_130.1.2%2Bg48f3ef6%2Bchromium-130.0.6723.44_linuxarm64.tar.bz2")
+        endif()
+    else()
+        if(_cef_flavor STREQUAL "minimal")
+            # Minimal build for x86_64
+            set(cef_prebuilt_path "https://cef-builds.spotifycdn.com/cef_binary_130.1.2%2Bg48f3ef6%2Bchromium-130.0.6723.44_linux64_minimal.tar.bz2")
+            set(cef_prebuilt_version "cef_binary_130.1.2%2Bg48f3ef6%2Bchromium-130.0.6723.44_linux64_minimal.tar.bz2")
+        else()
+            set(cef_prebuilt_path "https://cef-builds.spotifycdn.com/cef_binary_130.1.2%2Bg48f3ef6%2Bchromium-130.0.6723.44_linux64.tar.bz2")
+            set(cef_prebuilt_version "cef_binary_130.1.2%2Bg48f3ef6%2Bchromium-130.0.6723.44_linux64.tar.bz2")
+        endif()
+    endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    message(WARNING "current system is Windows")
+    set(cef_prebuilt_path "https://github.com/hlwhl/webview_cef/releases/download/prebuilt_cef_bin_linux/webview_cef_bin_0.0.2_101.0.18+chromium-101.0.4951.67_windows64.zip")
+    set(cef_prebuilt_version "webview_cef_bin_0.0.2_101.0.18+chromium-101.0.4951.67_windows64")
+# elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+#   message(WARNING "current system is MacOS")
+#   # macOS uses CocoaPods (podspec) to link CEF; this script is not used there.
+endif()
+set(cef_prebuilt_version_path "https://github.com/hlwhl/webview_cef/releases/download/prebuilt_cef_bin_linux/version.txt")
+
+
+function(extract_file filename extract_dir)
+    message(WARNING "${filename} will extract to ${extract_dir} ...")
+
+    set(temp_dir ${CMAKE_BINARY_DIR}/tmp_for_extract.dir)
+    if(EXISTS ${temp_dir})
+        file(REMOVE_RECURSE ${temp_dir})
+    endif()
+    file(MAKE_DIRECTORY ${temp_dir})
+    execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xf ${filename}
+            WORKING_DIRECTORY ${temp_dir})
+
+    file(GLOB contents "${temp_dir}/*")
+    list(LENGTH contents n)
+    if(NOT n EQUAL 1 OR NOT IS_DIRECTORY "${contents}")
+        set(contents "${temp_dir}")
+    endif()
+
+    get_filename_component(contents ${contents} ABSOLUTE)
+
+    file(INSTALL "${contents}/" DESTINATION ${extract_dir})
+
+    file(REMOVE_RECURSE ${temp_dir})
+endfunction()
+
+function(download_file url filename)
+    message(WARNING "Downloading ${filename} from ${url}")
+    # Use proper signature: SHOW_PROGRESS + STATUS var
+    file(DOWNLOAD ${url} ${filename} SHOW_PROGRESS STATUS dl_status TLS_VERIFY ON)
+    list(LENGTH dl_status _dl_len)
+    if(_dl_len GREATER 0)
+        list(GET dl_status 0 _dl_code)
+    else()
+        set(_dl_code 1)
+    endif()
+    if(NOT _dl_code EQUAL 0)
+        message(FATAL_ERROR "Failed to download CEF bundle from ${url}. STATUS=${dl_status}. Check network/proxy or install the bundle manually in your platform's third/cef directory.")
+    endif()
+endfunction(download_file)
+
+function(prepare_prebuilt_files filepath)
+    set(need_download FALSE)
+
+    if(NOT EXISTS ${filepath})
+        message(WARNING "No ${filepath} found")
+        set(need_download TRUE)
+    else()
+        if(NOT EXISTS ${filepath}/version.txt)
+            message(WARNING "No ${filepath}/version.txt found")
+            set(need_download TRUE)
+        else()
+            file(READ ${filepath}/version.txt local_version)
+            if(local_version STREQUAL cef_prebuilt_version)
+                message(WARNING "No need to update ${filepath}")
+            else()
+                set(need_download TRUE)
+            endif()
+            file(REMOVE_RECURSE ${filepath}/new_version.txt)
+        endif()
+
+        # Sanity check: ensure critical headers exist (guards against skewed copies)
+        if(EXISTS ${filepath} AND NOT EXISTS ${filepath}/include/cef_task_manager.h)
+            message(WARNING "Missing expected header: ${filepath}/include/cef_task_manager.h. Will refresh CEF prebuilt.")
+            set(need_download TRUE)
+        endif()
+    endif()
+
+    if(need_download)
+        message(WARNING "Need to update ${filepath}")
+        file(REMOVE_RECURSE ${filepath}/cmake ${filepath}/Debug ${filepath}/Release ${filepath}/Resources ${filepath}/libcef_dll ${filepath}/libcef_dll_wrapper ${filepath}/include)
+        # Name the file using the actual archive extension for clarity
+        set(_cef_archive ${CMAKE_BINARY_DIR}/prebuilt_cef.tar.bz2)
+        if(EXISTS ${_cef_archive})
+            file(REMOVE ${_cef_archive})
+        endif()
+        download_file(${cef_prebuilt_path} ${_cef_archive})
+        file(MAKE_DIRECTORY ${filepath})
+        extract_file(${_cef_archive} ${filepath})
+
+        ## Needed for making it run on arm64 Linux (makes it check for arm64 or aarch64 instead of just arm64)
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            execute_process(
+                COMMAND sed -i "s/\"\\${CMAKE_HOST_SYSTEM_PROCESSOR}\" STREQUAL \"arm64\"/((\"\\${CMAKE_HOST_SYSTEM_PROCESSOR}\" STREQUAL \"arm64\") OR (\"\\${CMAKE_HOST_SYSTEM_PROCESSOR}\" STREQUAL \"aarch64\"))/" ${filepath}/cmake/cef_variables.cmake
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endif()
+
+        file(WRITE "${filepath}/version.txt" "${cef_prebuilt_version}")
+        file(REMOVE_RECURSE ${_cef_archive})
+    endif()
+endfunction(prepare_prebuilt_files)
+
+# Legacy fallback helper removed. Consumers must use OS-specific locations only:
+# - Linux: linux/third/cef
+# - Windows: windows/third/cef
+# - macOS: macos/third/cef (managed via CocoaPods/podspec)

@@ -5,8 +5,8 @@
 import FlutterMacOS
 import Foundation
 
-import webview_cef
+import flutter_chromium
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  WebviewCefPlugin.register(with: registry.registrar(forPlugin: "WebviewCefPlugin"))
+  FlutterChromiumPlugin.register(with: registry.registrar(forPlugin: "FlutterChromiumPlugin"))
 }

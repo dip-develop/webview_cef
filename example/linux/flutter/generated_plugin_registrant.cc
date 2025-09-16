@@ -6,10 +6,10 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <webview_cef/webview_cef_plugin.h>
+#include <flutter_chromium/flutter_chromium_plugin.h>
 
 void fl_register_plugins(FlPluginRegistry* registry) {
-  g_autoptr(FlPluginRegistrar) webview_cef_registrar =
-      fl_plugin_registry_get_registrar_for_plugin(registry, "WebviewCefPlugin");
-  webview_cef_plugin_register_with_registrar(webview_cef_registrar);
+  g_autoptr(FlPluginRegistrar) flutter_chromium_registrar =
+      fl_plugin_registry_get_registrar_for_plugin(registry, "FlutterChromiumPlugin");
+  flutter_chromium_plugin_register_with_registrar(flutter_chromium_registrar);
 }

@@ -1,4 +1,4 @@
-import 'package:webview_cef/src/webview.dart';
+import 'webview.dart';
 
 typedef TitleChangeCb = void Function(String title);
 typedef UrlChangeCb = void Function(String url);

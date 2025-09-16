@@ -1,10 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:webview_cef/webview_cef_method_channel.dart';
+import 'package:flutter_chromium/flutter_chromium_method_channel.dart';
 
 void main() {
   MethodChannelWebviewCef platform = MethodChannelWebviewCef();
-  const MethodChannel channel = MethodChannel('webview_cef');
+  const MethodChannel channel = MethodChannel('flutter_chromium');
 
   // Ensure test binding is initialized
   TestWidgetsFlutterBinding.ensureInitialized();

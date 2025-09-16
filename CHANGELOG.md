@@ -1,3 +1,10 @@
+## 0.3.0 (unreleased)
+- Rebrand to `flutter_chromium` with unified method channel across platforms.
+- Initialization improvements: idempotent, timeout-guarded, and readiness gating before JS calls.
+- Linux: stability fixes (frame-id normalization, native GTK file dialogs, shutdown hardening), improved thread marshalling.
+- CEF handling: per-OS storage directories (linux/windows), optional flavor selection on Linux (`DOWNLOAD_CEF_FLAVOR=minimal|standard`), clearer Debug→Release fallback behavior.
+- Docs: refreshed README, added MIGRATION.md, licensing NOTICE and MIT for new/modified code.
+
 ## 0.2.0
 - Linux support!
 - Multiple instances support.

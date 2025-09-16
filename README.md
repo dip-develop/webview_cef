@@ -1,20 +1,20 @@
-# WebView CEF
+# flutter_chromium
 
-<a href="https://pub.dev/packages/webview_cef"><img src="https://img.shields.io/pub/likes/webview_cef?logo=dart" alt="Pub.dev likes"/></a> <a href="https://pub.dev/packages/webview_cef" alt="Pub.dev popularity"><img src="https://img.shields.io/pub/popularity/webview_cef?logo=dart"/></a> <a href="https://pub.dev/packages/webview_cef"><img src="https://img.shields.io/pub/points/webview_cef?logo=dart" alt="Pub.dev points"/></a> <a href="https://pub.dev/packages/webview_cef"><img src="https://img.shields.io/pub/v/webview_cef.svg" alt="latest version"/></a> <a href="https://pub.dev/packages/webview_cef"><img src="https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-blue?logo=flutter" alt="Platform"/></a>
-
-Flutter Desktop WebView backed by CEF (Chromium Embedded Framework).
-This project is under heavy development, and the APIs are not stable yet.
+Flutter desktop WebView powered by the Chromium Embedded Framework (CEF).
+This is an actively developed fork/rebrand of `webview_cef` focused on Linux stability, a unified method channel, and clearer setup across platforms.
 
 ## Index
 
 - [Supported OSs](#supported-oss)
-- [Setting Up](#setting-up)
-  - [Windows <img align="center" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Windows_logo_-_2021.svg/1200px-Windows_logo_-_2021.svg.png" width="12">](#windows)
-  - [macOS <img align="center" src="https://seeklogo.com/images/A/apple-logo-52C416BDDD-seeklogo.com.png" width="12">](#macos)
-  - [Linux <img align="center" src="https://1000logos.net/wp-content/uploads/2017/03/LINUX-LOGO.png" width="14">](#linux)
-- [TODOs](#todos)
+- [Install](#install)
+- [Initialization](#initialization)
+- [Platform setup](#platform-setup)
+  - [Windows](#windows)
+  - [macOS](#macos)
+  - [Linux](#linux)
+- [Development notes](#development-notes)
 - [Demo](#demo)
-  - [Screenshots](#screenshots)
+- [Contributing](#contributing)
 - [Credits](#credits)
 
 ## Supported OSs
@@ -23,15 +23,52 @@ This project is under heavy development, and the APIs are not stable yet.
 - [x] macOS 10.12+ <img align="center" src="https://seeklogo.com/images/A/apple-logo-52C416BDDD-seeklogo.com.png" width="12">
 - [x] Linux (x64 and arm64) <img align="center" src="https://1000logos.net/wp-content/uploads/2017/03/LINUX-LOGO.png" width="14">
 
-## Setting Up
+## Install
 
-### Windows <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Windows_logo_-_2021.svg/1200px-Windows_logo_-_2021.svg.png" width="16">
+Add to your `pubspec.yaml`:
 
-Inside your application folder, you need to add some lines in your `windows\runner\main.cpp`.（Because of Chromium multi process architecture, and IME support, and also flutter rquires invoke method channel on flutter engine thread)
+```
+dependencies:
+  flutter_chromium: ^0.0.1
+```
+
+Or for local development:
+
+```
+dependencies:
+  flutter_chromium:
+    path: ../flutter_chromium
+```
+
+## Initialization
+
+Call once before creating any WebViews:
+
+```dart
+await WebviewManager().initialize(
+  userAgent: "MyApp/1.0",            // optional; appended to default UA
+  cachePath: "/path/to/cache",       // optional; enables persistence if writable
+  persistSessionCookies: true,         // requires non-empty cachePath
+  persistUserPreferences: true,        // requires non-empty cachePath
+  enableGPU: false,                    // toggle hardware acceleration
+);
+```
+
+Notes:
+
+- If `cachePath` is empty or omitted, CEF runs in-memory (incognito-like) and nothing is persisted to disk.
+- `persistSessionCookies` and `persistUserPreferences` require a non-empty `cachePath`.
+- Initialization is idempotent and guarded with a timeout; errors will surface as a `PlatformException`.
+
+## Platform setup
+
+### Windows
+
+Inside your application folder, you need to add some lines in your `windows\runner\main.cpp`.（Because of Chromium multi process architecture, and IME support, and also flutter requires invoking the method channel on the Flutter engine thread)
 
 ```cpp
-//Introduce the source code of this plugin into your own project
-#include "webview_cef/webview_cef_plugin_c_api.h"
+// Introduce the plugin's C API into your project (preferred new path):
+#include "flutter_chromium/flutter_chromium_plugin_c_api.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
@@ -55,7 +92,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
 When building the project for the first time, a prebuilt cef bin package (200MB, link in release) will be downloaded automatically, so you may wait for a longer time if you are building the project for the first time.
 
-### macOS <img src="https://seeklogo.com/images/A/apple-logo-52C416BDDD-seeklogo.com.png" width="15">
+### macOS
 
 To use the plugin in macOS, you'll need to clone the repository onto your project location, prefereably inside a `packages/` folder on the root of your project. 
 Update your `pubspec.yaml` file to accomodate the change.
@@ -63,9 +100,8 @@ Update your `pubspec.yaml` file to accomodate the change.
 ...
 
 dependencies:
-  # Webview
-  webview_cef:
-    path: ./packages/webview_cef     # Or wherever you cloned the repo
+  flutter_chromium:
+    path: ./packages/flutter_chromium     # Or wherever you cloned the repo
     
     
 ...
@@ -73,11 +109,11 @@ dependencies:
 
 Then follow the below steps inside the `macos/` folder <b>of the cloned repository</b>.<br/><br/>
 
-1. Download prebuilt cef bundles from [arm64](https://github.com/hlwhl/webview_cef/releases/download/prebuilt_cef_bin_mac_arm64/CEFbins-mac103.0.12-arm64.zip) or [intel](https://github.com/hlwhl/webview_cef/releases/download/prebuilt_cef_bin_mac_intel/mac103.0.12-Intel.zip) depends on your target machine arch.
+1. Download prebuilt cef bundles from [arm64](https://github.com/hlwhl/webview_cef/releases/download/prebuilt_cef_bin_mac_arm64/CEFbins-mac103.0.12-arm64.zip) or [intel](https://github.com/hlwhl/webview_cef/releases/download/prebuilt_cef_bin_mac_intel/mac103.0.12-Intel.zip) depending on your target architecture.
 
 > Note: You can also download [universal binary](https://github.com/hlwhl/webview_cef/releases/download/prebuilt_cef_bin_mac_universal/mac103.0.12-universal.zip) for build an mac-universal app if you want to build an mac universal app. See [#30](/../../issues/30). Thanks to [@okiabrian123](https://github.com/okiabrian123).
 
-2. Unzip the archive and put all files into `macos/third/cef`. (Inside the cloned repository, not your project)
+2. Unzip the archive and put all files into `macos/third/cef`. (Inside the cloned repository, not your app project)
 
 3. Run the example app.
 
@@ -87,16 +123,22 @@ Then follow the below steps inside the `macos/` folder <b>of the cloned reposito
 
 > Note: Currently the project has not been enabled with multi process support due to debug convenience. If you want to enable multi process support, you may want to enable multi process mode by changing the implementation and build your own helper bundle. (Finding a more elegant way in the future.)
 
-### Linux <img src="https://1000logos.net/wp-content/uploads/2017/03/LINUX-LOGO.png" width="16">
+### Linux
 
-For Linux, just adding `webview_cef` to your `pubspec.yaml` (e.g. by running `flutter pub add webview_cef`) does the job.
+For Linux, just add `flutter_chromium` to your `pubspec.yaml` and build your app as usual.
 
-#### Optional: choose CEF flavor (Linux only)
+#### CEF location and flavor (Linux/Windows/macOS)
 
-You can control which CEF package is downloaded by passing a CMake variable when building your app:
+CEF binaries are stored per-OS to avoid conflicts:
 
-- `DOWNLOAD_CEF_FLAVOR=standard` (default): downloads the full CEF package.
-- `DOWNLOAD_CEF_FLAVOR=minimal`: downloads a smaller, minimal package to reduce size.
+- Linux: `linux/third/cef`
+- Windows: `windows/third/cef`
+- macOS: `macos/third/cef` (managed via CocoaPods; see Podspec)
+
+You can control which CEF package is downloaded by passing a CMake variable when building your app (Linux only for now):
+
+- `DOWNLOAD_CEF_FLAVOR=standard` (default): full CEF package.
+- `DOWNLOAD_CEF_FLAVOR=minimal`: smaller package to reduce size.
 
 Example (Flutter app): add this line near the top of your app's `linux/CMakeLists.txt` (before plugin registration):
 
@@ -112,46 +154,20 @@ On Linux, file dialogs are handled natively via GTK (Open, Save, and Select Fold
 
 When building in Debug, if Debug CEF binaries are not present, the build will automatically fall back to the Release `libcef.so` and resources. This helps local development but may limit debug symbol availability. To get full debug info, install the Debug CEF bundle.
 
-### Initialization options
+On Linux, enabling GPU can reduce software-rendering warnings for WebGL, but driver support varies by system.
 
-You can configure CEF at startup. Call this once before creating any WebViews:
+## Development notes
 
-```dart
-await WebviewManager().initialize(
-  userAgent: "MyApp/1.0",               // optional: appended to default UA
-  cachePath: "/path/to/cache",          // optional: writable directory for cache
-  persistSessionCookies: true,            // effective only if cachePath is set
-  persistUserPreferences: true,           // effective only if cachePath is set
-  enableGPU: false,                       // set true to enable GPU acceleration
-);
-```
+Highlights in this fork:
 
-Notes:
-- If `cachePath` is empty or omitted, CEF runs in-memory (incognito-like) and nothing is persisted to disk.
-- `persistSessionCookies` and `persistUserPreferences` require a non-empty `cachePath`.
-- On Linux, enabling GPU can reduce software-rendering warnings for WebGL, but driver support varies by system.
-
-## TODOs
-
-> Pull requests are welcome.
-
-- [x] Windows support
-- [x] macOS support
-- [x] Linux support
-- [x] Multi instance support
-- [x] IME support(Only support Third party IME on Linux and Windows, Microsoft IME on Windows, and only tested Chinese input methods)
-- [x] Mouse events support
-- [x] JS bridge support
-- [x] Cookie manipulation support
-- [x] Release to pub
-- [x] Trackpad support
-- [ ] Better macOS binary distribution
-- [ ] Easier way to integrate macOS helper bundles(multi process)
-- [x] devTools support
+- Unified method channel name `flutter_chromium` across platforms.
+- Safer initialization: idempotent, timeouts, and Dart-side readiness gating before JS calls.
+- Linux stability fixes: frame-id normalization, GTK native dialogs, shutdown hardening, and improved thread marshalling.
+- CEF download improvements: per-OS storage, flavor selection (Linux), and Debug→Release fallback.
 
 ## Demo
 
-This demo is a simple webview app that can be used to test the `webview_cef` plugin.
+This demo is a simple WebView app that can be used to test the `flutter_chromium` plugin.
 
 <kbd>![demo_compressed](https://user-images.githubusercontent.com/7610615/190432410-c53ef1c4-33c2-461b-af29-b0ecab983579.gif)</kbd>
 
@@ -164,6 +180,9 @@ This demo is a simple webview app that can be used to test the `webview_cef` plu
 | <img src="https://user-images.githubusercontent.com/7610615/195815041-b9ec4da8-560f-4257-9303-f03a016da5c6.png" width="400" />                      | <img width="400" alt="image" src="https://user-images.githubusercontent.com/7610615/195818746-e5adf0ef-dc8c-48ad-9b11-e552ca65b08a.png"> | <img src="https://github.com/hlwhl/webview_cef/assets/49640121/3a81f576-b555-4e16-8609-b3c7d6eec869" width="400" />  |
 
 ## Credits
+
+This project builds on the excellent work in `webview_cef`.
+
 ## Contributing
 
 Pull requests are welcome. There is no formal contribution guide yet; please use a feature/issue-based branch name and a clear PR description. Suggested branch naming:
